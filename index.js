@@ -1,6 +1,9 @@
 const express = require('express');
 const ssbClient = require('ssb-client');
 
+const PUBLIC_IP = '198.74.54.60';
+const PUBLIC_HOSTNAME = 'pub.ericbarch.com';
+
 const SERVER_PORT = 3000;
 const app = express();
 app.set('view engine', 'ejs');
@@ -11,8 +14,9 @@ app.get('/', async (req, res) => {
   try {
     const sbot = await getSbotInstance();
     const inviteCode = await getInvite(sbot);
-    res.render('index', { inviteCode: inviteCode });
+    res.render('index', { inviteCode: inviteCode.replace(PUBLIC_IP, PUBLIC_HOSTNAME) });
   } catch (sbotErr) {
+    console.error(sbotErr);
     cachedSbotInstance = null;
     res.sendStatus(500);
   }
@@ -24,7 +28,7 @@ function getSbotInstance () {
       return resolve(cachedSbotInstance);
     }
 
-    ssbClient((err, sbot) => {
+    ssbClient(null, { host: PUBLIC_HOSTNAME }, (err, sbot) => {
       if (err) {
         reject(err);
       } else {
